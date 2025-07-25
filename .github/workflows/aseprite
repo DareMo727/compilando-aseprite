@@ -1,0 +1,99 @@
+name: Build Aseprite for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+          choco install ninja -y
+          choco install git -y
+          choco install python -y
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Clone Skia
+        run: |
+          git clone --depth 1 https://github.com/aseprite/skia.git externals/skia
+
+      - name: Build Skia
+        run: |
+          cd externals/skia
+       name: Build Aseprite for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+          choco install ninja -y
+          choco install git -y
+          choco install python -y
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Clone Skia
+        run: |
+          git clone --depth 1 https://github.com/aseprite/skia.git externals/skia
+
+      - name: Build Skia
+        run: |
+          cd externals/skia
+          python scripts/build.py windows x64 Release
+          cd ../..
+
+      - name: Configure CMake
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release -DLAF_BACKEND=skia -DSKIA_DIR=../externals/skia -DSKIA_LIBRARY_DIR=../externals/skia/out/Release-x64 -DSKIA_LIBRARY=../externals/skia/out/Release-x64/skia.lib -G Ninja ..
+
+      - name: Build Aseprite
+        run: |
+          cd build
+          ninja
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aseprite-windows
+          path: build/bin/*.exe   python scripts/build.py windows x64 Release
+          cd ../..
+
+      - name: Configure CMake
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release -DLAF_BACKEND=skia -DSKIA_DIR=../externals/skia -DSKIA_LIBRARY_DIR=../externals/skia/out/Release-x64 -DSKIA_LIBRARY=../externals/skia/out/Release-x64/skia.lib -G Ninja ..
+
+      - name: Build Aseprite
+        run: |
+          cd build
+          ninja
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aseprite-windows
+          path: build/bin/*.exe
